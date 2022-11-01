@@ -1,9 +1,9 @@
 package athena
 
 import (
-	"athena/athena/injector"
-	"athena/athena/task"
 	"fmt"
+	"github.com/XNXKTech/athena/athena/injector"
+	"github.com/XNXKTech/athena/athena/task"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"log"
