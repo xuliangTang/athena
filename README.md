@@ -77,3 +77,9 @@ func main() {
 		Launch()
 }
 ```
+
+使用命令行工具生成一个 `Controller`
+```bash
+$ ./athena-cli new controller user
+Controller [src/classes/UserClass.go] created successfully.
+```
