@@ -16,8 +16,9 @@ type Athena struct {
 	props []any
 }
 
-func Ignite(conf *ConfImpl) *Athena {
-	FrameConf = conf
+func Ignite(fns ...FrameConfAttrFn) *Athena {
+	FrameConfAttrFns(fns).apply(FrameConf)
+
 	g := &Athena{Engine: gin.New()}
 	g.Use(ErrorHandler()) // 加载异常处理中间件
 	return g

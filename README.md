@@ -48,6 +48,7 @@
 ├── storage/               ----- 临时文件目录（日志、上传文件、文件缓存等）
 ├── test/                  ----- 单元测试目录
 ├── application.yml
+├── athena-cli             ----- 命令行工具
 ├── go.mod
 ```
 
@@ -65,7 +66,7 @@ go get github.com/XNXKTech/athena
 package main
 
 func main() {
-	athena.Ignite(config.BaseConf).
+	athena.Ignite().
 		Load(NewConfigModule(),
 			wechat.NewMiniProgramModule()).
 		Beans(beans.Import()...).
