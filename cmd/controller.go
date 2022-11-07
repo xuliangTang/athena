@@ -5,6 +5,7 @@ import (
 	Helper "github.com/XNXKTech/athena/cmd/helper"
 	"github.com/XNXKTech/athena/cmd/resource"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // controllerCmd represents the controller command
@@ -13,7 +14,12 @@ var controllerCmd = &cobra.Command{
 	Short: "Create a new controller class",
 	Long:  `Create a new controller class`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//根据模板生成控制器
+		// 根据模板生成控制器
+		_, err := os.Lstat(Helper.GetWorkDir() + fmt.Sprintf("/src/classes/%sClass.go", Helper.Ucfirst(args[0])))
+		if !os.IsNotExist(err) { // 控制器文件已存在
+			fmt.Printf("Controller [src/classes/%sClass.go] already exists.\n", Helper.Ucfirst(args[0]))
+			return
+		}
 		Helper.GenFile(Helper.UnGzip(resource.CONTROLLER_TPL),
 			fmt.Sprintf("/src/classes/%sClass.go", Helper.Ucfirst(args[0])),
 			map[string]interface{}{

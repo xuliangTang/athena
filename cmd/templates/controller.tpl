@@ -1,9 +1,9 @@
 package classes
 
 import (
-    "github.com/gin-gonic/gin"
+	"github.com/XNXKTech/athena/athena"
+	"github.com/gin-gonic/gin"
 )
-
 {{$ClassName:=(printf "%s%s" .ControllerName "Class") | Ucfirst}}
 type {{$ClassName}} struct {
 }
@@ -13,8 +13,6 @@ func New{{$ClassName}}() *{{$ClassName}} {
 }
 
 func(this *{{$ClassName}}) {{.ControllerName}}Detail(ctx *gin.Context) *athena.Json {
-	//
-
 	return &athena.Json{}
 }
 

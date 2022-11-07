@@ -20,6 +20,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("hello, Athena.")
 		if cfgVersion {
 			fmt.Println("version is 1.0.0")
 		}
