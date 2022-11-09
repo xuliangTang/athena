@@ -27,6 +27,7 @@ func init() {
 		new(ModelsResponder),
 		new(JsonResponder),
 		new(HttpCodeResponder),
+		new(CollectionResponder),
 	}
 
 	ResponsePool = &sync.Pool{New: func() any {
@@ -66,6 +67,19 @@ type Json map[string]any
 type JsonResponder func(*gin.Context) *Json
 
 func (this JsonResponder) RespondTo() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		response := GetResponse()
+		defer PutResponse(response)
+		response.Data = this(context)
+		context.JSON(response.HttpCode, response)
+	}
+}
+
+// Controller return Collection
+
+type CollectionResponder func(ctx *gin.Context) *Collection
+
+func (this CollectionResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		response := GetResponse()
 		defer PutResponse(response)
