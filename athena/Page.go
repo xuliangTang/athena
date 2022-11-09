@@ -7,14 +7,15 @@ import (
 )
 
 type Page struct {
-	CurrentPage int   `json:"current_page"` // 当前页
-	PerPage     int   `json:"per_page"`     // 每页条数
-	TotalSize   int64 `json:"total_size"`   // 总条数
-	TotalPage   int   `json:"total_page"`   // 总页数
+	CurrentPage int    `json:"current_page"` // 当前页
+	PerPage     int    `json:"per_page"`     // 每页条数
+	TotalSize   int64  `json:"total_size"`   // 总条数
+	TotalPage   int    `json:"total_page"`   // 总页数
+	Order       string `json:"-"`
 }
 
-func NewPage(currentPage int, perPage int) *Page {
-	return &Page{CurrentPage: currentPage, PerPage: perPage}
+func NewPage(currentPage int, perPage int, order string) *Page {
+	return &Page{CurrentPage: currentPage, PerPage: perPage, Order: order}
 }
 
 // NewPageWithCtx 通过 query 参数创建
@@ -31,7 +32,12 @@ func NewPageWithCtx(ctx *gin.Context) *Page {
 		perPage = 20
 	}
 
-	return &Page{CurrentPage: currentPage, PerPage: perPage}
+	getOrder := ctx.Query("order")
+	if getOrder == "" {
+		getOrder = "id DESC"
+	}
+
+	return &Page{CurrentPage: currentPage, PerPage: perPage, Order: getOrder}
 }
 
 // IsValid 是否有效
