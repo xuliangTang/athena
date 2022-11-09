@@ -2,7 +2,9 @@ package athena
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"time"
 )
 
 type Model interface {
@@ -17,3 +19,14 @@ func MakeModels(v interface{}) Models {
 	}
 	return Models(b)
 }
+
+// Conditions 自定义 where 条件
+type Conditions struct {
+	Query any
+	Args  []any
+}
+
+func NewConditions(query any, args ...any) *Conditions {
+	return &Conditions{Query: query, Args: args}
+}
+
