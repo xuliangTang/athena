@@ -25,7 +25,9 @@ func ErrorHandler() gin.HandlerFunc {
 					errInfo = fmt.Sprintf("unknown error type: %s", reflect.TypeOf(e).String())
 				}
 
-				Logger().Error("PANIC ERROR", zap.String("info", errInfo))
+				Logger().Error("PANIC ERROR",
+					zap.String("info", errInfo),
+				)
 				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": e})
 			}
 		}()

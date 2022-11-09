@@ -14,14 +14,35 @@ var FrameConf *ConfImpl
 type FrameConfAttrFn func(FrameConf *ConfImpl)
 type FrameConfAttrFns []FrameConfAttrFn
 type ConfImpl struct {
-	AppPath string // 项目根目录
-	Port    int
+	AppPath   string // 项目根目录
+	Port      int
+	LogAccess *ConfLog
+	LogError  *ConfLog
+}
+
+type ConfLog struct {
+	FilePath   string
+	MaxSize    int
+	MaxAge     int
+	MaxBackups int
 }
 
 func init() {
 	FrameConf = &ConfImpl{
 		AppPath: Helper.GetWorkDir(),
 		Port:    80,
+		LogAccess: &ConfLog{
+			FilePath:   "/storage/logs/access.log",
+			MaxSize:    10, // 日志大小限制，单位MB
+			MaxAge:     30, // 历史日志文件保留天数
+			MaxBackups: 5,  // 最大保留历史日志数量
+		},
+		LogError: &ConfLog{
+			FilePath:   "/storage/logs/error.log",
+			MaxSize:    10,
+			MaxAge:     60,
+			MaxBackups: 5,
+		},
 	}
 }
 
@@ -35,6 +56,20 @@ func (this FrameConfAttrFns) apply(conf *ConfImpl) {
 func WithPort(port int) FrameConfAttrFn {
 	return func(FrameConf *ConfImpl) {
 		FrameConf.Port = port
+	}
+}
+
+// WithLogAccess 自定义成功日志配置
+func WithLogAccess(confLog *ConfLog) FrameConfAttrFn {
+	return func(FrameConf *ConfImpl) {
+		FrameConf.LogAccess = confLog
+	}
+}
+
+// WithLogError 自定义失败日志配置
+func WithLogError(confLog *ConfLog) FrameConfAttrFn {
+	return func(FrameConf *ConfImpl) {
+		FrameConf.LogError = confLog
 	}
 }
 
