@@ -20,7 +20,7 @@ func Ignite(fns ...FrameConfAttrFn) *Athena {
 	FrameConfAttrFns(fns).apply(FrameConf)
 
 	g := &Athena{Engine: gin.New()}
-	g.Use(ErrorHandler()) // 加载异常处理中间件
+	g.Use(CorsHandler(), ErrorHandler())
 	return g
 }
 
@@ -51,7 +51,7 @@ func (this *Athena) Load(ls ...ILoad) *Athena {
 	return this
 }
 
-// Attach 加入中间件
+// Attach 加入全局中间件
 func (this *Athena) Attach(f IFairing) *Athena {
 	this.Use(func(context *gin.Context) {
 		err := f.OnRequest(context)
@@ -65,8 +65,23 @@ func (this *Athena) Attach(f IFairing) *Athena {
 }
 
 // Mount 挂载
-func (this *Athena) Mount(group string, classes ...IClass) *Athena {
-	this.g = this.Group(group)
+func (this *Athena) Mount(group string, fs []IFairing, classes ...IClass) *Athena {
+	if fs != nil && len(fs) > 0 {
+		var handlers []gin.HandlerFunc
+		for _, f := range fs {
+			handlers = append(handlers, func(context *gin.Context) {
+				err := f.OnRequest(context)
+				if err != nil {
+					context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				} else {
+					context.Next()
+				}
+			})
+		}
+		this.g = this.Group(group, handlers...)
+	} else {
+		this.g = this.Group(group)
+	}
 
 	for _, class := range classes {
 		class.Build(this)
