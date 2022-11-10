@@ -20,7 +20,7 @@ func Ignite(fns ...FrameConfAttrFn) *Athena {
 	FrameConfAttrFns(fns).apply(FrameConf)
 
 	g := &Athena{Engine: gin.New()}
-	g.Use(CorsHandler(), ErrorHandler())
+	g.Use(CorsHandler(), ErrorHandler(), RequestHandler())
 	return g
 }
 

@@ -2,6 +2,7 @@ package athena
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -117,4 +118,23 @@ func getTops() []TeeOption {
 	}
 
 	return tops
+}
+
+// RequestHandler 请求日志
+func RequestHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		startTime := time.Now()
+		ctx.Next()
+		endTime := time.Now()
+		execTime := endTime.Sub(startTime) // 响应时间
+		requestMethod := ctx.Request.Method
+		requestURI := ctx.Request.RequestURI
+		statusCode := ctx.Writer.Status()
+		requestIP := ctx.ClientIP()
+		userAgent := ctx.Request.UserAgent()
+		Logger().Info(fmt.Sprintf("%s - %s %s[%d]", requestIP, requestMethod, requestURI, statusCode),
+			zap.String("execTime", execTime.String()),
+			zap.String("userAgent", userAgent),
+		)
+	}
 }
