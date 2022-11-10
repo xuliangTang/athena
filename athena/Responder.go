@@ -70,6 +70,9 @@ func (this JsonResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		response := GetResponse()
 		defer PutResponse(response)
+		// get的对象可能是上一次回收的对象,需要重新赋值
+		response.HttpCode = http.StatusOK
+		response.Message = "success"
 		response.Data = this(context)
 		context.JSON(response.HttpCode, response)
 	}
@@ -83,6 +86,8 @@ func (this CollectionResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		response := GetResponse()
 		defer PutResponse(response)
+		response.HttpCode = http.StatusOK
+		response.Message = "success"
 		response.Data = this(context)
 		context.JSON(response.HttpCode, response)
 	}
@@ -109,7 +114,9 @@ func (this StringResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		response := GetResponse()
 		defer PutResponse(response)
+		response.HttpCode = http.StatusOK
 		response.Message = this(context)
+		response.Data = nil
 		context.JSON(response.HttpCode, response)
 	}
 }
@@ -122,6 +129,8 @@ func (this ModelResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		response := GetResponse()
 		defer PutResponse(response)
+		response.HttpCode = http.StatusOK
+		response.Message = "success"
 		response.Data = this(context)
 		context.JSON(response.HttpCode, response)
 	}
