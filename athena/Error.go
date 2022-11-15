@@ -3,7 +3,6 @@ package athena
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -25,9 +24,8 @@ func ErrorHandler() gin.HandlerFunc {
 					errInfo = fmt.Sprintf("unknown error type: %s", reflect.TypeOf(e).String())
 				}
 
-				Logger().Error("PANIC ERROR",
-					zap.String("info", errInfo),
-				)
+				Logger().Error("PANIC: " + errInfo)
+				
 				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": e})
 			}
 		}()
