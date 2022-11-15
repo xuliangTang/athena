@@ -72,7 +72,7 @@ func (l *UriLimiter) getConf() *LimitConfRules {
 	rule := &LimitConfRules{}
 	once.Do(func() {
 		vp := viper.New()
-		vp.SetConfigFile(FrameConf.AppPath + "/tests/application.yml")
+		vp.SetConfigFile(FrameConf.AppPath + "/application.yml")
 		err := vp.ReadInConfig()
 		if err != nil {
 			log.Fatalln("read config.yaml error :", err)
