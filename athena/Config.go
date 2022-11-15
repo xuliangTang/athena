@@ -33,14 +33,14 @@ func init() {
 		Port:    80,
 		LogAccess: &ConfLog{
 			FilePath:   "/storage/logs/access.log",
-			MaxSize:    10, // 日志大小限制，单位MB
-			MaxAge:     30, // 历史日志文件保留天数
-			MaxBackups: 5,  // 最大保留历史日志数量
+			MaxSize:    255, // 日志大小限制，单位MB
+			MaxAge:     60,  // 历史日志文件保留天数
+			MaxBackups: 5,   // 最大保留历史日志数量
 		},
 		LogError: &ConfLog{
 			FilePath:   "/storage/logs/error.log",
-			MaxSize:    10,
-			MaxAge:     60,
+			MaxSize:    255,
+			MaxAge:     180,
 			MaxBackups: 5,
 		},
 	}
