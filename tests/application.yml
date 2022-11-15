@@ -1,0 +1,9 @@
+rateLimitRules:
+  - /v1/test:
+      interval: 60
+      capacity: 2
+      quantum: 2
+  - /v1/ping:
+      interval: 1
+      capacity: 1
+      quantum: 2
