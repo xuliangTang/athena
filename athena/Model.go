@@ -30,6 +30,16 @@ func NewConditions(query any, args ...any) *Conditions {
 	return &Conditions{Query: query, Args: args}
 }
 
+// Preload 自定义预加载
+type Preload struct {
+	Query string
+	Args  []any
+}
+
+func NewPreload(query string, args ...any) *Preload {
+	return &Preload{Query: query, Args: args}
+}
+
 // DateTime 自定义时间格式
 type DateTime time.Time
 
