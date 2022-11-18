@@ -7,3 +7,11 @@ rateLimitRules:
       interval: 1
       capacity: 1
       quantum: 2
+
+fuseRules:
+  - test1:
+      timeout: 1000
+      maxConcurrentRequests: 1000
+      sleepWindow: 6000
+      requestVolumeThreshold: 1000
+      errorPercentThreshold: 50
