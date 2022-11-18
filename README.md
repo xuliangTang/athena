@@ -8,6 +8,7 @@
 - [x] 容器管理，依赖注入（DI）
 - [x] 强大的注解功能
 - [x] 秒级定时任务和异步协程任务
+- [x] 支持限流和熔断
 - [x] 便携的CLI开发工具、自动代码生成
 - [x] 自动化的测试用例生成
 
@@ -71,7 +72,7 @@ func main() {
 			wechat.NewMiniProgramModule()).
 		Beans(beans.Import()...).
 		Attach(auth.NewAuthMiddleware()).
-		Mount("v1", classes.NewEpisodeClass(),
+		Mount("v1", nil, classes.NewEpisodeClass(),
 			classes.NewUserClass()).
 		CronTask("0/30 * * * * *", tasks.SyncEpisodes()).
 		Launch()
@@ -82,4 +83,70 @@ func main() {
 ```bash
 $ ./athena-cli new controller user
 Controller [src/classes/UserClass.go] created successfully.
+```
+
+### 依赖注入
+向`BeanFactory`中注册后，在需要的地方打上`inject`注解即可自动完成注入
+```
+type UserClass struct {
+	UserService *service.UserService `inject:"-"`
+}
+
+type UserService struct {
+	UserDAO      *daos.UserDAO   `inject:"-"`
+	Db           *db.GormAdapter `inject:"-"`
+	IpGeoService *IpGeoService   `inject:"-"`
+}
+```
+
+### 限流
+增加配置项：
+```
+rateLimitRules:
+  - /v1/test:
+      interval: 60  # 多长时间添加一次令牌
+      capacity: 2   # 令牌桶的容量
+      quantum: 2    # 到达定时器指定的时间，往桶里面加多少令牌
+  - /v1/ping:
+      interval: 1
+      capacity: 1
+      quantum: 2
+```
+加入中间件启用限流：
+```
+athena.Ignite().Attach(athena.NewRateLimit())
+```
+
+### 熔断
+增加配置项：
+```
+fuseRules:
+  - test1:                              # name
+      timeout: 1000                     # command超时时间
+      maxConcurrentRequests: 1000       # command最大并发量
+      sleepWindow: 6000                 # 熔断时长
+      requestVolumeThreshold: 1000      # 请求数量临界值
+      errorPercentThreshold: 50         # 失败率阈值
+```
+启用配置：
+```
+athena.Ignite().Load(athena.NewFuse())
+```
+使用示例：
+```
+hystrix.Do("test1", func() error {
+    resp, err := http.Get("https://www.google.com/")
+    if err != nil || resp.StatusCode != http.StatusOK {
+        fmt.Printf("请求失败:%v", err)
+        return errors.New(fmt.Sprintf("error resp"))
+    }
+    return nil
+    
+}, func(err error) error {
+    if err != nil {
+        fmt.Printf("circuitBreaker and err is %s\n", err.Error())
+        msg = err.Error()
+    }
+    return nil
+})
 ```
