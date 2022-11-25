@@ -50,10 +50,16 @@ func NewConditionsWithQuery(query any) *Conditions {
 		field := v.Field(i)
 		tagForm := typeField.Tag.Get("form")
 		if tagForm != "" && !field.IsZero() {
-			// 判断操作符
+			// 操作符默认=
 			tagOp := typeField.Tag.Get("op")
 			if tagOp == "" {
 				tagOp = "="
+			}
+
+			// 字段名称优先使用column，没有的话使用form
+			tagColumn := typeField.Tag.Get("column")
+			if tagColumn != "" {
+				tagForm = tagColumn
 			}
 
 			retQuery = append(retQuery, fmt.Sprintf("%s %s ?", tagForm, tagOp))
