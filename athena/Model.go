@@ -87,10 +87,31 @@ func NewPreload(query string, args ...any) *Preload {
 	return &Preload{Query: query, Args: args}
 }
 
+const DateTimeFormat = "2006-01-02 15:04:05"
+const DateFormat = "2006-01-02"
+
 // DateTime 自定义时间格式
 type DateTime time.Time
 
 func (t *DateTime) MarshalJSON() ([]byte, error) {
 	tTime := time.Time(*t)
-	return []byte(fmt.Sprintf("\"%v\"", tTime.Format("2006-01-02 15:04:05"))), nil
+	return []byte(fmt.Sprintf("\"%v\"", tTime.Format(DateTimeFormat))), nil
+}
+
+func (t *DateTime) IsZero() bool {
+	tm := time.Time(*t)
+	return tm.IsZero()
+}
+
+func (t *DateTime) UnmarshalJSON(data []byte) (err error) {
+	// 空值不进行解析
+	if len(data) == 2 {
+		*t = DateTime(time.Time{})
+		return
+	}
+
+	// 指定解析的格式
+	now, err := time.Parse(`"`+DateTimeFormat+`"`, string(data))
+	*t = DateTime(now)
+	return
 }
