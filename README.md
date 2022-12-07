@@ -85,7 +85,7 @@ $ ./athena-cli new controller user
 Controller [src/classes/UserClass.go] created successfully.
 ```
 
-### 依赖注入
+## 依赖注入
 向`BeanFactory`中注册后，在需要的地方打上`inject`注解即可自动完成注入
 ```
 type UserClass struct {
@@ -99,7 +99,7 @@ type UserService struct {
 }
 ```
 
-### 限流
+## 限流
 增加配置项：
 ```
 rateLimitRules:
@@ -117,8 +117,8 @@ rateLimitRules:
 athena.Ignite().Attach(athena.NewRateLimit())
 ```
 
-### 熔断
-增加配置项：
+## 熔断
+在 ``application.yml`` 增加配置项：
 ```
 fuseRules:
   - test1:                              # name
@@ -149,4 +149,46 @@ hystrix.Do("test1", func() error {
     }
     return nil
 })
+```
+
+## 国际化
+在 ``application.yml`` 增加配置项：
+```
+i18n:
+  defaultLanguage: "zh"     # 默认语言
+```
+在 ``lang`` 目录下定义语言翻译文件，如：
+```
+// zh.json
+{
+  "test": {
+    "hello": "你好, {{.name}}."
+  }
+}
+
+// en.json
+{
+  "test": {
+    "hello": "hello, {{.name}}."
+  }
+}
+```
+
+开启模块后，会自动扫描当前目录所有文件
+```
+athena.Ignite().Load(athena.NewI18nModule())
+```
+使用示例：
+```
+localize := athena.Unwrap(athena.GetDefaultLocalize()).(*i18n.Localizer)
+strDefault := athena.Unwrap(localize.Localize(&i18n.LocalizeConfig{
+    MessageID:    "test.hello",
+    TemplateData: map[string]string{"name": "Nick"},
+}))
+
+localizeEn := athena.Unwrap(athena.GetLocalize(language.English.String())).(*i18n.Localizer)
+strEnglish := athena.Unwrap(localizeEn.Localize(&i18n.LocalizeConfig{
+    MessageID:    "test.hello",
+    TemplateData: map[string]string{"name": "Nick"},
+}))
 ```
