@@ -7,7 +7,7 @@ import (
 
 func main() {
 	athena.Ignite().
-		Load(athena.NewFuse()).
+		Load(athena.NewFuse(), athena.NewI18nModule()).
 		Attach(athena.NewRateLimit()).
 		Mount("v1", nil, classes.NewTestClass()).
 		Launch()
