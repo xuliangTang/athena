@@ -70,9 +70,10 @@ func (this *I18nModule) Run() error {
 	}
 	this.Bundle = i18n.NewBundle(tag)
 	this.Bundle.RegisterUnmarshalFunc("yaml", json.Unmarshal)
+	replacer := strings.NewReplacer("lang/", "", "lang\\", "")
 	for _, f := range fs {
 		this.Bundle.MustLoadMessageFile(f)
-		lang := strings.ReplaceAll(strings.Split(f, ".")[0], "lang/", "")
+		lang := replacer.Replace(strings.Split(f, ".")[0])
 		this.Localize[lang] = i18n.NewLocalizer(this.Bundle, lang)
 	}
 
@@ -90,7 +91,6 @@ func GetDefaultLocalize() (*i18n.Localizer, error) {
 	if err := checkIl8nModule(); err != nil {
 		return nil, err
 	}
-
 	localize, exist := i18nModule.Localize[i18nModule.conf.I18nOpt.DefaultLanguage]
 	if exist {
 		return localize, nil
