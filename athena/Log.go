@@ -38,37 +38,38 @@ type TeeOption struct {
 func Logger() *LoggingImpl {
 	loggerOnce.Do(func() {
 		// 设置多log文件和轮转
-		tops := getTops()
+		trees := getZapTree()
 		var cores []zapcore.Core
 		cfg := zap.NewProductionConfig()
 		cfg.EncoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString(t.Format("2006-01-02 15:04:05"))
 		}
 
-		for _, top := range tops {
+		for i, _ := range trees {
+			topIndex := i
 			lv := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return top.Lef(&lvl)
+				return trees[topIndex].Lef(&lvl)
 			})
 
-			w := zapcore.AddSync(&lumberjack.Logger{
-				Filename:   top.Filename,
-				MaxSize:    top.Ropt.MaxSize,
-				MaxBackups: top.Ropt.MaxBackups,
-				MaxAge:     top.Ropt.MaxAge,
-				Compress:   top.Ropt.Compress,
+			ws := zapcore.AddSync(&lumberjack.Logger{
+				Filename:   trees[i].Filename,
+				MaxSize:    trees[i].Ropt.MaxSize,
+				MaxBackups: trees[i].Ropt.MaxBackups,
+				MaxAge:     trees[i].Ropt.MaxAge,
+				Compress:   trees[i].Ropt.Compress,
 				LocalTime:  true,
 			})
 
 			core := zapcore.NewCore(
 				zapcore.NewJSONEncoder(cfg.EncoderConfig),
-				zapcore.AddSync(w),
+				ws,
 				lv,
 			)
 			cores = append(cores, core)
 		}
 
-		logger = zap.New(zapcore.NewTee(cores...))
-		defer logger.Sync() // flushes buffer, if any
+		logger = zap.New(zapcore.NewTee(cores...), zap.AddCaller())
+		defer logger.Sync()
 		logging = &LoggingImpl{logger}
 	})
 
@@ -89,10 +90,11 @@ func (this *LoggingImpl) GetStack() string {
 	return fmt.Sprintf("==> %s\n", string(buf[:n]))
 }
 
-func getTops() []TeeOption {
+// 所有日志类型
+func getZapTree() []TeeOption {
 	var tops = []TeeOption{
 		{
-			Filename: FrameConf.AppPath + FrameConf.LogAccess.FilePath,
+			Filename: FrameConf.AppPath + FrameConf.LogAccess.FilePath, // 输出文件目录
 			Ropt: RotateOptions{
 				MaxSize:    FrameConf.LogAccess.MaxSize,    // 日志大小限制，单位MB
 				MaxAge:     FrameConf.LogAccess.MaxAge,     // 历史日志文件保留天数
