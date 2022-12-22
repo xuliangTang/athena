@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/xuliangTang/athena/athena"
+	"github.com/xuliangTang/athena/tests/conf"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -21,6 +22,9 @@ func NewTestClass() *TestClass {
 func (this *TestClass) test(ctx *gin.Context) *athena.Json {
 	return &athena.Json{
 		"message": "test",
+		"my_name": conf.MyConf.MyName,
+		"my_age":  conf.MyConf.MyAge,
+		"ex_name": conf.MyConf.Ex.ExName,
 	}
 }
 

@@ -1,20 +1,31 @@
 rateLimitRules:
   - /v1/test:
       interval: 60
-      capacity: 2
-      quantum: 2
-  - /v1/ping:
-      interval: 1
-      capacity: 1
-      quantum: 2
+      capacity: 10
+      quantum: 10
+  - /v1/lang:
+      interval: 60
+      capacity: 3
+      quantum: 3
 
 fuseRules:
   - test1:
       timeout: 1000
       maxConcurrentRequests: 1000
       sleepWindow: 6000
-      requestVolumeThreshold: 1000
+      requestVolumeThreshold: 10
       errorPercentThreshold: 50
 
 i18n:
   defaultLanguage: "zh"
+
+myName: "txl"
+myAge: 13
+ex:
+  exName: "kkkk"
+
+logAccess:
+  filePath:
+
+logError:
+  filePath:
