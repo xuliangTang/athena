@@ -16,9 +16,7 @@ type Athena struct {
 	props []any
 }
 
-func Ignite(fns ...FrameConfAttrFn) *Athena {
-	FrameConfAttrFns(fns).apply(FrameConf)
-
+func Ignite() *Athena {
 	g := &Athena{Engine: gin.New()}
 	g.Use(CorsHandler(), ErrorHandler(), RequestHandler())
 	return g
@@ -27,7 +25,7 @@ func Ignite(fns ...FrameConfAttrFn) *Athena {
 // Launch 最终启动函数
 func (this *Athena) Launch() {
 	task.GetCron().Start()
-	this.Run(fmt.Sprintf(":%d", FrameConf.Port))
+	this.Run(fmt.Sprintf(":%d", AppConf.Port))
 }
 
 func (this *Athena) Handle(httpMethod, relativePath string, handler interface{}) *Athena {
@@ -45,7 +43,7 @@ func (this *Athena) Load(ls ...ILoad) *Athena {
 			Logger().Error("load error",
 				zap.String("info", err.Error()),
 			)
-			log.Fatalln(err.Error())
+			log.Fatalln("load module error: ", err.Error())
 		}
 	}
 	return this

@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/juju/ratelimit"
 	"github.com/spf13/viper"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -22,6 +21,8 @@ type LimitOpt struct {
 type LimitConfRules struct {
 	Rules map[string]*LimitOpt `mapstructure:"rateLimitRules"`
 }
+
+func (this *LimitConfRules) InitDefaultConfig(vp *viper.Viper) {}
 
 // ILimiter 限流方法实现定义
 type ILimiter interface {
@@ -71,21 +72,10 @@ func (l *UriLimiter) getConf() *LimitConfRules {
 	once := sync.Once{}
 	rule := &LimitConfRules{}
 	once.Do(func() {
-		vp := viper.New()
-		vp.SetConfigFile(FrameConf.AppPath + "/application.yml")
-		err := vp.ReadInConfig()
-		if err != nil {
-			log.Fatalln("read config.yaml error :", err)
-		}
-		errRule := vp.Unmarshal(&rule)
-		if errRule != nil {
-			log.Fatalln("unmarshal err :", errRule)
-		}
-
-		// 监控配置文件变化
-		vp.WatchConfig()
-		vp.OnConfigChange(func(in fsnotify.Event) {
-			GlobalLimiter = NewUriLimiter().AddBucketByConf()
+		AddViperUnmarshal(rule, func(vp *viper.Viper) OnConfigChangeRunFn {
+			return func(in fsnotify.Event) {
+				GlobalLimiter = NewUriLimiter().AddBucketByConf()
+			}
 		})
 	})
 	return rule

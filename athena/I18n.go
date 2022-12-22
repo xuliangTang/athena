@@ -22,10 +22,12 @@ type I18nConf struct {
 	I18nOpt *I18nOpt `mapstructure:"i18n"`
 }
 
+func (this *I18nConf) InitDefaultConfig(vp *viper.Viper) {}
+
 var i18nModule *I18nModule
 
 type I18nModule struct {
-	conf     *I18nConf
+	conf     I18nConf
 	Localize map[string]*i18n.Localizer
 	Bundle   *i18n.Bundle
 }
@@ -40,18 +42,9 @@ func NewI18nModule() *I18nModule {
 func (this *I18nModule) initConf() {
 	once := sync.Once{}
 	once.Do(func() {
-		vp := viper.New()
-		vp.SetConfigFile(FrameConf.AppPath + "/application.yml")
-		err := vp.ReadInConfig()
-		if err != nil {
-			log.Fatalln("read config.yaml error :", err)
-		}
-		errRule := vp.Unmarshal(&this.conf)
-		if errRule != nil {
-			log.Fatalln("unmarshal err :", errRule)
-		}
+		AddViperUnmarshal(&this.conf, nil)
 
-		if this.conf == nil || this.conf.I18nOpt == nil {
+		if this.conf.I18nOpt == nil {
 			log.Fatalln("missing i18n conf")
 		}
 	})

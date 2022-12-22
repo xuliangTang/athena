@@ -94,23 +94,23 @@ func (this *LoggingImpl) GetStack() string {
 func getZapTree() []TeeOption {
 	var tops = []TeeOption{
 		{
-			Filename: FrameConf.AppPath + FrameConf.LogAccess.FilePath, // 输出文件目录
+			Filename: AppConf.AppPath + AppConf.LogAccess.FilePath, // 输出文件目录
 			Ropt: RotateOptions{
-				MaxSize:    FrameConf.LogAccess.MaxSize,    // 日志大小限制，单位MB
-				MaxAge:     FrameConf.LogAccess.MaxAge,     // 历史日志文件保留天数
-				MaxBackups: FrameConf.LogAccess.MaxBackups, // 最大保留历史日志数量
-				Compress:   false,                          // 历史日志文件压缩标识
+				MaxSize:    AppConf.LogAccess.MaxSize,    // 日志大小限制，单位MB
+				MaxAge:     AppConf.LogAccess.MaxAge,     // 历史日志文件保留天数
+				MaxBackups: AppConf.LogAccess.MaxBackups, // 最大保留历史日志数量
+				Compress:   false,                        // 历史日志文件压缩标识
 			},
 			Lef: func(lvl *zapcore.Level) bool {
 				return *lvl <= zapcore.InfoLevel
 			},
 		},
 		{
-			Filename: FrameConf.AppPath + FrameConf.LogError.FilePath,
+			Filename: AppConf.AppPath + AppConf.LogError.FilePath,
 			Ropt: RotateOptions{
-				MaxSize:    FrameConf.LogError.MaxSize,
-				MaxAge:     FrameConf.LogError.MaxAge,
-				MaxBackups: FrameConf.LogError.MaxBackups,
+				MaxSize:    AppConf.LogError.MaxSize,
+				MaxAge:     AppConf.LogError.MaxAge,
+				MaxBackups: AppConf.LogError.MaxBackups,
 				Compress:   false,
 			},
 			Lef: func(lvl *zapcore.Level) bool {

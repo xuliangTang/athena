@@ -8,89 +8,78 @@ import (
 	"log"
 )
 
-// FrameConf 脚手架配置
-var FrameConf *ConfImpl
+// AppConf 配置中心
+var AppConf AppConfImpl
 
-type FrameConfAttrFn func(FrameConf *ConfImpl)
-type FrameConfAttrFns []FrameConfAttrFn
-type ConfImpl struct {
-	AppPath   string // 项目根目录
+type AppConfImpl struct {
+	AppPath   string
 	Port      int
-	LogAccess *ConfLog
-	LogError  *ConfLog
+	LogAccess *LogOpt
+	LogError  *LogOpt
 }
 
-type ConfLog struct {
-	FilePath   string
-	MaxSize    int
-	MaxAge     int
-	MaxBackups int
+type LogOpt struct {
+	FilePath   string // 输出文件目录
+	MaxSize    int    // 日志大小限制，单位MB
+	MaxAge     int    // 历史日志文件保留天数
+	MaxBackups int    // 最大保留历史日志数量
+}
+
+func (this *AppConfImpl) InitDefaultConfig(vp *viper.Viper) {
+	vp.SetDefault("port", 80)
+	vp.SetDefault("logAccess.filePath", "/storage/logs/access.log")
+	vp.SetDefault("logAccess.maxSize", 255)
+	vp.SetDefault("logAccess.maxAge", 60)
+	vp.SetDefault("logAccess.maxBackups", 5)
+	vp.SetDefault("logError.filePath", "/storage/logs/error.log")
+	vp.SetDefault("logError.maxSize", 255)
+	vp.SetDefault("logError.maxAge", 180)
+	vp.SetDefault("logError.maxBackups", 5)
 }
 
 func init() {
-	FrameConf = &ConfImpl{
+	AppConf = AppConfImpl{
 		AppPath: Helper.GetWorkDir(),
-		Port:    80,
-		LogAccess: &ConfLog{
-			FilePath:   "/storage/logs/access.log",
-			MaxSize:    255, // 日志大小限制，单位MB
-			MaxAge:     60,  // 历史日志文件保留天数
-			MaxBackups: 5,   // 最大保留历史日志数量
-		},
-		LogError: &ConfLog{
-			FilePath:   "/storage/logs/error.log",
-			MaxSize:    255,
-			MaxAge:     180,
-			MaxBackups: 5,
-		},
 	}
-}
 
-func (this FrameConfAttrFns) apply(conf *ConfImpl) {
-	for _, fn := range this {
-		fn(conf)
-	}
-}
-
-// WithPort 自定义端口
-func WithPort(port int) FrameConfAttrFn {
-	return func(FrameConf *ConfImpl) {
-		FrameConf.Port = port
-	}
-}
-
-// WithLogAccess 自定义成功日志配置
-func WithLogAccess(confLog *ConfLog) FrameConfAttrFn {
-	return func(FrameConf *ConfImpl) {
-		FrameConf.LogAccess = confLog
-	}
-}
-
-// WithLogError 自定义失败日志配置
-func WithLogError(confLog *ConfLog) FrameConfAttrFn {
-	return func(FrameConf *ConfImpl) {
-		FrameConf.LogError = confLog
-	}
+	AddViperUnmarshal(&AppConf, func(vp *viper.Viper) OnConfigChangeRunFn {
+		return func(in fsnotify.Event) {
+			// 配置变更后重新解析
+			if err := vp.Unmarshal(&AppConf); err != nil {
+				log.Println(fmt.Sprintf("unmarshal conf failed: %s", err.Error()))
+			}
+		}
+	})
 }
 
 // ConfigModule 项目配置模块
 type ConfigModule struct {
-	AppConf    any
-	ConfigInit IConfigInit
+	ConfigInit IConfig
 }
 
-// IConfigInit 设置默认配置项的方法
-type IConfigInit interface {
-	InitDefaultConfig()
+type IConfig interface {
+	// InitDefaultConfig 初始化配置默认值
+	InitDefaultConfig(vp *viper.Viper)
 }
 
-// NewConfigModule 在 load 方法中加载项目配置
-func NewConfigModule(appConf any, init IConfigInit) *ConfigModule {
-	return &ConfigModule{AppConf: appConf, ConfigInit: init}
+// NewConfigModule 自定义配置映射模块
+func NewConfigModule(init IConfig) *ConfigModule {
+	return &ConfigModule{
+		ConfigInit: init,
+	}
 }
 
 func (this *ConfigModule) Run() error {
-	viper.SetConfigName("application")
+	AddViperUnmarshal(this.ConfigInit, func(vp *viper.Viper) OnConfigChangeRunFn {
+		return func(in fsnotify.Event) {
+			// 配置变更后重新解析
+			if err := vp.Unmarshal(&this.ConfigInit); err != nil {
+				log.Println(fmt.Sprintf("unmarshal conf failed: %s", err.Error()))
+			}
+		}
+	})
+
+	/*viper.SetConfigName("application")
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 	viper.SetConfigType("yml")
@@ -99,21 +88,46 @@ func (this *ConfigModule) Run() error {
 		return fmt.Errorf("error reading config file, %s", err)
 	}
 
-	if err := viper.Unmarshal(&this.AppConf); err != nil {
-		return fmt.Errorf("unable to decode into struct, %v", err)
-	}
+	// 初始化默认值
+	this.ConfigInit.InitDefaultConfig(viper.New())
 
-	if this.ConfigInit != nil {
-		this.ConfigInit.InitDefaultConfig()
+	if err := viper.Unmarshal(this.ConfigInit); err != nil {
+		return fmt.Errorf("unable to decode into struct, %v", err)
 	}
 
 	// 监控配置文件变化
 	viper.WatchConfig()
 	viper.OnConfigChange(func(in fsnotify.Event) {
-		if err := viper.Unmarshal(&this.AppConf); err != nil {
-			log.Fatalln(fmt.Sprintf("unmarshal conf failed: %s", err.Error()))
+		// 配置变更后重新解析
+		if err := viper.Unmarshal(this.ConfigInit); err != nil {
+			log.Println(fmt.Sprintf("unmarshal conf failed: %s", err.Error()))
 		}
-	})
+	})*/
 
 	return nil
+}
+
+type OnConfigChangeFn func(vp *viper.Viper) OnConfigChangeRunFn
+type OnConfigChangeRunFn func(in fsnotify.Event)
+
+func AddViperUnmarshal(conf IConfig, onChange OnConfigChangeFn) {
+	vp := viper.New()
+	vp.SetConfigFile(AppConf.AppPath + "/application.yml")
+	vp.AutomaticEnv()
+	if err := vp.ReadInConfig(); err != nil {
+		log.Fatalln(fmt.Sprintf("error reading config file, %s", err))
+	}
+
+	// 初始化默认值
+	conf.InitDefaultConfig(vp)
+
+	if err := vp.Unmarshal(conf); err != nil {
+		log.Fatalln(fmt.Sprintf("unable to decode into struct, %v", err))
+	}
+
+	// 监控配置文件变化
+	if onChange != nil {
+		vp.WatchConfig()
+		vp.OnConfigChange(onChange(vp))
+	}
 }

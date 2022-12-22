@@ -4,7 +4,6 @@ import (
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"log"
 	"sync"
 )
 
@@ -26,6 +25,8 @@ type FuseRules struct {
 	Rules map[string]*FuseOpt `mapstructure:"fuseRules"`
 }
 
+func (this *FuseRules) InitDefaultConfig(vp *viper.Viper) {}
+
 type Fuse struct {
 }
 
@@ -37,22 +38,10 @@ func (this *Fuse) getConf() *FuseRules {
 	once := sync.Once{}
 	rule := &FuseRules{}
 	once.Do(func() {
-		vp := viper.New()
-		vp.SetConfigFile(FrameConf.AppPath + "/application.yml")
-		err := vp.ReadInConfig()
-		if err != nil {
-			log.Fatalln("read config.yaml error :", err)
-		}
-		errRule := vp.Unmarshal(&rule)
-		if errRule != nil {
-			log.Fatalln("unmarshal err :", errRule)
-		}
-
-		// 监控配置文件变化
-		vp.WatchConfig()
-		vp.OnConfigChange(func(in fsnotify.Event) {
-			log.Println("更新了")
-			this.addRuleByConf()
+		AddViperUnmarshal(rule, func(vp *viper.Viper) OnConfigChangeRunFn {
+			return func(in fsnotify.Event) {
+				this.addRuleByConf()
+			}
 		})
 	})
 	return rule
