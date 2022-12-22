@@ -3,8 +3,8 @@ package athena
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	Helper "github.com/lain/athena/cmd/helper"
 	"github.com/spf13/viper"
+	Helper "github.com/xuliangTang/athena/cmd/helper"
 	"log"
 )
 

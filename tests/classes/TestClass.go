@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gin-gonic/gin"
-	"github.com/lain/athena/athena"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/xuliangTang/athena/athena"
 	"golang.org/x/text/language"
 	"net/http"
 )

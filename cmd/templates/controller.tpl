@@ -1,7 +1,7 @@
 package classes
 
 import (
-	"github.com/lain/athena/athena"
+	"github.com/xuliangTang/athena/athena"
 	"github.com/gin-gonic/gin"
 )
 {{$ClassName:=(printf "%s%s" .ControllerName "Class") | Ucfirst}}

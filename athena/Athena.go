@@ -3,8 +3,8 @@ package athena
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/lain/athena/athena/injector"
-	"github.com/lain/athena/athena/task"
+	"github.com/xuliangTang/athena/athena/injector"
+	"github.com/xuliangTang/athena/athena/task"
 	"go.uber.org/zap"
 	"log"
 	"net/http"

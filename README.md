@@ -56,7 +56,7 @@
 ## 安装
 
 ```
-go get github.com/lain/athena
+go get github.com/xuliangTang/athena
 ```
 
 ## 快速开始

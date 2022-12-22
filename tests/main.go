@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lain/athena/athena"
-	"github.com/lain/athena/tests/classes"
+	"github.com/xuliangTang/athena/athena"
+	"github.com/xuliangTang/athena/tests/classes"
 )
 
 func main() {

@@ -2,7 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"github.com/lain/athena/athena"
+	"github.com/xuliangTang/athena/athena"
 	"gorm.io/gorm"
 	"time"
 )

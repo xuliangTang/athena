@@ -1,4 +1,4 @@
-module github.com/lain/athena
+module github.com/xuliangTang/athena
 
 go 1.19
 
