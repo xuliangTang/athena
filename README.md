@@ -56,7 +56,7 @@
 ## 安装
 
 ```
-go get github.com/XNXKTech/athena
+go get github.com/lain/athena
 ```
 
 ## 快速开始

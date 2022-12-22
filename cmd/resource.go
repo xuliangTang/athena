@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	Helper "github.com/XNXKTech/athena/cmd/helper"
+	Helper "github.com/lain/athena/cmd/helper"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"

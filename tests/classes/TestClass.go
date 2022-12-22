@@ -3,9 +3,9 @@ package classes
 import (
 	"errors"
 	"fmt"
-	"github.com/XNXKTech/athena/athena"
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gin-gonic/gin"
+	"github.com/lain/athena/athena"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 	"net/http"

@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	Helper "github.com/XNXKTech/athena/cmd/helper"
-	"github.com/XNXKTech/athena/cmd/resource"
+	Helper "github.com/lain/athena/cmd/helper"
+	"github.com/lain/athena/cmd/resource"
 	"github.com/spf13/cobra"
 	"os"
 )
