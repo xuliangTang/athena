@@ -37,6 +37,32 @@ func (this *BeanFactoryImpl) Get(k any) any {
 	return nil
 }
 
+// Configuration 扫描配置类
+func (this *BeanFactoryImpl) Configuration(cfgs ...any) {
+	for _, cfg := range cfgs {
+		t := reflect.TypeOf(cfg)
+		if t.Kind() != reflect.Ptr {
+			panic("configurations required ptr object")
+		}
+		if t.Elem().Kind() != reflect.Struct {
+			continue
+		}
+
+		this.Set(cfg)
+		this.Inject(cfg)
+
+		v := reflect.ValueOf(cfg)
+		for i := 0; i < t.NumMethod(); i++ {
+			method := v.Method(i)
+			callRet := method.Call(nil)
+
+			if callRet != nil && len(callRet) == 1 {
+				this.Set(callRet[0].Interface())
+			}
+		}
+	}
+}
+
 // Inject 依赖注入bean
 func (this *BeanFactoryImpl) Inject(cls any) {
 	if cls == nil {

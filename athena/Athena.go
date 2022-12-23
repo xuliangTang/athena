@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"reflect"
 )
 
 type Athena struct {
@@ -24,6 +25,7 @@ func Ignite() *Athena {
 
 // Launch 最终启动函数
 func (this *Athena) Launch() {
+	this.applyAll()
 	task.GetCron().Start()
 	this.Run(fmt.Sprintf(":%d", AppConf.Port))
 }
@@ -89,11 +91,25 @@ func (this *Athena) Mount(group string, fs []IFairing, classes ...IClass) *Athen
 	return this
 }
 
+// Configuration 定义配置类，会被自动扫描注册到bean对象
+func (this *Athena) Configuration(cfgs ...any) *Athena {
+	injector.BeanFactory.Configuration(cfgs...)
+	return this
+}
+
 // Beans 依赖注入对象
 func (this *Athena) Beans(beans ...any) *Athena {
 	injector.BeanFactory.Set(beans...)
-	this.props = append(this.props, beans...)
+	// this.props = append(this.props, beans...)
 	return this
+}
+
+func (this *Athena) applyAll() {
+	for t, v := range injector.BeanFactory.GetBeanMapper() {
+		if t.Elem().Kind() == reflect.Struct {
+			injector.BeanFactory.Inject(v.Interface())
+		}
+	}
 }
 
 // CronTask 创建定时任务
