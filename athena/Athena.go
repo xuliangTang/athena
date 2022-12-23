@@ -2,12 +2,17 @@ package athena
 
 import (
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	"github.com/xuliangTang/athena/athena/config"
 	"github.com/xuliangTang/athena/athena/injector"
+	"github.com/xuliangTang/athena/athena/interfaces"
+	"github.com/xuliangTang/athena/athena/lib"
+	"github.com/xuliangTang/athena/athena/middlewares"
 	"github.com/xuliangTang/athena/athena/task"
 	"go.uber.org/zap"
 	"log"
-	"net/http"
 	"reflect"
 )
 
@@ -19,7 +24,7 @@ type Athena struct {
 
 func Ignite() *Athena {
 	g := &Athena{Engine: gin.New()}
-	g.Use(CorsHandler(), ErrorHandler(), RequestHandler())
+	g.registerSysMiddleware()
 	return g
 }
 
@@ -27,7 +32,7 @@ func Ignite() *Athena {
 func (this *Athena) Launch() {
 	this.applyAll()
 	task.GetCron().Start()
-	this.Run(fmt.Sprintf(":%d", AppConf.Port))
+	this.Run(fmt.Sprintf(":%d", config.AppConf.Port))
 }
 
 func (this *Athena) Handle(httpMethod, relativePath string, handler interface{}) *Athena {
@@ -37,45 +42,63 @@ func (this *Athena) Handle(httpMethod, relativePath string, handler interface{})
 	return this
 }
 
-// Load 初始化加载模块
-func (this *Athena) Load(ls ...ILoad) *Athena {
-	for _, l := range ls {
-		err := l.Run()
-		if err != nil {
-			Logger().Error("load error",
-				zap.String("info", err.Error()),
-			)
-			log.Fatalln("load module error: ", err.Error())
+// MappingConfig 映射配置文件到实体对象中
+func (this *Athena) MappingConfig(entity config.IConfig) *Athena {
+	config.AddViperUnmarshal(entity, func(vp *viper.Viper) config.OnConfigChangeRunFn {
+		return func(in fsnotify.Event) {
+			// 配置变更后重新解析
+			if err := vp.Unmarshal(&entity); err != nil {
+				log.Println(fmt.Sprintf("unmarshal config failed: %s", err.Error()))
+			}
 		}
-	}
+	})
+
 	return this
 }
 
-// Attach 加入全局中间件
-func (this *Athena) Attach(f IFairing) *Athena {
-	this.Use(func(context *gin.Context) {
-		err := f.OnRequest(context)
-		if err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			context.Next()
+// RegisterPlugin 注册插件
+func (this *Athena) RegisterPlugin(plugins ...interfaces.IPlugin) *Athena {
+	for _, plugin := range plugins {
+		if !plugin.Enabler() {
+			continue
 		}
+
+		plugin.InitModule()
+	}
+
+	return this
+}
+
+// 根据开关开启中间件
+func (this *Athena) registerSysMiddleware() {
+	if config.AppConf.Cors.Enable {
+		this.Attach(middlewares.NewCors())
+	}
+
+	if config.AppConf.ErrorCache.Enable {
+		this.Attach(middlewares.NewErrorCache())
+	}
+
+	if config.AppConf.Logging.RequestLogEnable {
+		this.Attach(middlewares.NewRequestLog())
+	}
+}
+
+// Attach 加入全局中间件
+func (this *Athena) Attach(f interfaces.IFairing) *Athena {
+	this.Use(func(context *gin.Context) {
+		f.OnRequest(context)
 	})
 	return this
 }
 
 // Mount 挂载
-func (this *Athena) Mount(group string, fs []IFairing, classes ...IClass) *Athena {
+func (this *Athena) Mount(group string, fs []interfaces.IFairing, classes ...IClass) *Athena {
 	if fs != nil && len(fs) > 0 {
 		var handlers []gin.HandlerFunc
 		for _, f := range fs {
 			handlers = append(handlers, func(context *gin.Context) {
-				err := f.OnRequest(context)
-				if err != nil {
-					context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				} else {
-					context.Next()
-				}
+				f.OnRequest(context)
 			})
 		}
 		this.g = this.Group(group, handlers...)
@@ -116,7 +139,7 @@ func (this *Athena) applyAll() {
 func (this *Athena) CronTask(expr string, f func()) *Athena {
 	_, err := task.GetCron().AddFunc(expr, f)
 	if err != nil {
-		Logger().Error("cron task error",
+		lib.Logger().Error("cron task error",
 			zap.String("expr", expr),
 			zap.String("info", err.Error()),
 		)

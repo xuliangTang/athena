@@ -1,8 +1,8 @@
-package athena
+package lib
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/xuliangTang/athena/athena/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -94,23 +94,23 @@ func (this *LoggingImpl) GetStack() string {
 func getZapTree() []TeeOption {
 	var tops = []TeeOption{
 		{
-			Filename: AppConf.AppPath + AppConf.LogAccess.FilePath, // 输出文件目录
+			Filename: config.AppConf.AppPath + config.AppConf.Logging.LogAccess.FilePath, // 输出文件目录
 			Ropt: RotateOptions{
-				MaxSize:    AppConf.LogAccess.MaxSize,    // 日志大小限制，单位MB
-				MaxAge:     AppConf.LogAccess.MaxAge,     // 历史日志文件保留天数
-				MaxBackups: AppConf.LogAccess.MaxBackups, // 最大保留历史日志数量
-				Compress:   false,                        // 历史日志文件压缩标识
+				MaxSize:    config.AppConf.Logging.LogAccess.MaxSize,    // 日志大小限制，单位MB
+				MaxAge:     config.AppConf.Logging.LogAccess.MaxAge,     // 历史日志文件保留天数
+				MaxBackups: config.AppConf.Logging.LogAccess.MaxBackups, // 最大保留历史日志数量
+				Compress:   false,                                       // 历史日志文件压缩标识
 			},
 			Lef: func(lvl *zapcore.Level) bool {
 				return *lvl <= zapcore.InfoLevel
 			},
 		},
 		{
-			Filename: AppConf.AppPath + AppConf.LogError.FilePath,
+			Filename: config.AppConf.AppPath + config.AppConf.Logging.LogError.FilePath,
 			Ropt: RotateOptions{
-				MaxSize:    AppConf.LogError.MaxSize,
-				MaxAge:     AppConf.LogError.MaxAge,
-				MaxBackups: AppConf.LogError.MaxBackups,
+				MaxSize:    config.AppConf.Logging.LogError.MaxSize,
+				MaxAge:     config.AppConf.Logging.LogError.MaxAge,
+				MaxBackups: config.AppConf.Logging.LogError.MaxBackups,
 				Compress:   false,
 			},
 			Lef: func(lvl *zapcore.Level) bool {
@@ -120,23 +120,4 @@ func getZapTree() []TeeOption {
 	}
 
 	return tops
-}
-
-// RequestHandler 请求日志
-func RequestHandler() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		startTime := time.Now()
-		ctx.Next()
-		endTime := time.Now()
-		execTime := endTime.Sub(startTime) // 响应时间
-		requestMethod := ctx.Request.Method
-		requestURI := ctx.Request.RequestURI
-		statusCode := ctx.Writer.Status()
-		requestIP := ctx.ClientIP()
-		userAgent := ctx.Request.UserAgent()
-		Logger().Info(fmt.Sprintf("%s - %s %s[%d]", requestIP, requestMethod, requestURI, statusCode),
-			zap.String("execTime", execTime.String()),
-			zap.String("userAgent", userAgent),
-		)
-	}
 }

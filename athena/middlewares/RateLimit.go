@@ -1,14 +1,42 @@
-package athena
+package middlewares
 
 import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/juju/ratelimit"
 	"github.com/spf13/viper"
+	"github.com/xuliangTang/athena/athena/config"
 	"strings"
 	"sync"
 	"time"
 )
+
+// RateLimit @Middleware 限流中间件
+type RateLimit struct{}
+
+func NewRateLimit() *RateLimit {
+	return &RateLimit{}
+}
+
+// GlobalLimiter 全局限流规则
+var GlobalLimiter ILimiter
+
+func init() {
+	GlobalLimiter = NewUriLimiter().AddBucketByConf()
+}
+
+func (this *RateLimit) OnRequest(ctx *gin.Context) {
+	key := GlobalLimiter.Key(ctx)
+	if bucket, ok := GlobalLimiter.GetBucket(key); ok {
+		count := bucket.TakeAvailable(1)
+		if count == 0 {
+			panic("rate limit")
+			// ctx.AbortWithStatus(http.StatusForbidden)
+		}
+	}
+
+	ctx.Next()
+}
 
 // LimitOpt 限流配置
 type LimitOpt struct {
@@ -72,7 +100,7 @@ func (l *UriLimiter) getConf() *LimitConfRules {
 	once := sync.Once{}
 	rule := &LimitConfRules{}
 	once.Do(func() {
-		AddViperUnmarshal(rule, func(vp *viper.Viper) OnConfigChangeRunFn {
+		config.AddViperUnmarshal(rule, func(vp *viper.Viper) config.OnConfigChangeRunFn {
 			return func(in fsnotify.Event) {
 				GlobalLimiter = NewUriLimiter().AddBucketByConf()
 			}
@@ -88,33 +116,4 @@ func (l *UriLimiter) AddBucketByConf() ILimiter {
 		l.AddBucketsByUri(k, v.Interval, v.Capacity, v.Quantum)
 	}
 	return l
-}
-
-// GlobalLimiter 全局限流规则
-var GlobalLimiter ILimiter
-
-func init() {
-	GlobalLimiter = NewUriLimiter().AddBucketByConf()
-}
-
-// RateLimit 限流中间件
-type RateLimit struct {
-}
-
-func NewRateLimit() *RateLimit {
-	return &RateLimit{}
-}
-
-func (this *RateLimit) OnRequest(ctx *gin.Context) error {
-	key := GlobalLimiter.Key(ctx)
-	if bucket, ok := GlobalLimiter.GetBucket(key); ok {
-		count := bucket.TakeAvailable(1)
-		if count == 0 {
-			panic("rate limit")
-			// ctx.AbortWithStatus(http.StatusForbidden)
-			// return fmt.Errorf("rate limit")
-		}
-	}
-
-	return nil
 }
