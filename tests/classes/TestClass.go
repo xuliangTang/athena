@@ -19,8 +19,8 @@ func NewTestClass() *TestClass {
 	return &TestClass{}
 }
 
-func (this *TestClass) test(ctx *gin.Context) *athena.Json {
-	return &athena.Json{
+func (this *TestClass) test(ctx *gin.Context) athena.Json {
+	return athena.Json{
 		"message": "test",
 		"my_name": conf.MyConf.MyName,
 		"my_age":  conf.MyConf.MyAge,
@@ -28,7 +28,7 @@ func (this *TestClass) test(ctx *gin.Context) *athena.Json {
 	}
 }
 
-func (this *TestClass) ping(ctx *gin.Context) *athena.Json {
+func (this *TestClass) ping(ctx *gin.Context) athena.Json {
 	msg := "success"
 	hystrix.Do("test1", func() error {
 		resp, err := http.Get("https://www.google.com/")
@@ -45,10 +45,10 @@ func (this *TestClass) ping(ctx *gin.Context) *athena.Json {
 		return nil
 	})
 
-	return &athena.Json{"msg": msg}
+	return athena.Json{"msg": msg}
 }
 
-func (this *TestClass) lang(ctx *gin.Context) *athena.Json {
+func (this *TestClass) lang(ctx *gin.Context) athena.Json {
 	localize := athena.Unwrap(athena.GetDefaultLocalize()).(*i18n.Localizer)
 	strDefault := athena.Unwrap(localize.Localize(&i18n.LocalizeConfig{
 		MessageID:    "test.hello",
@@ -61,7 +61,7 @@ func (this *TestClass) lang(ctx *gin.Context) *athena.Json {
 		TemplateData: map[string]string{"name": "Nick"},
 	}))
 
-	return &athena.Json{"default": strDefault, "en": strEnglish}
+	return athena.Json{"default": strDefault, "en": strEnglish}
 }
 
 func (this *TestClass) Build(athena *athena.Athena) {

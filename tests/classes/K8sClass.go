@@ -16,11 +16,10 @@ func NewK8sClass() *K8sClass {
 	return &K8sClass{}
 }
 
-func (this *K8sClass) deployments(ctx *gin.Context) *athena.Json {
+func (this *K8sClass) deployments(ctx *gin.Context) any {
 	//deps, err := this.Client.AppsV1().Deployments("default").List(ctx, v1.ListOptions{})
-	depList, err := this.DeploymentMap.ListByNS("default")
-	athena.Error(err)
-	return &athena.Json{"data": depList}
+	depList := athena.Unwrap(this.DeploymentMap.ListByNS("default"))
+	return depList
 }
 
 func (this *K8sClass) Build(athena *athena.Athena) {
