@@ -7,7 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/xuliangTang/athena/athena"
-	"github.com/xuliangTang/athena/tests/conf"
+	"github.com/xuliangTang/athena/athena/plugins"
+	"github.com/xuliangTang/athena/tests/properties"
 	"golang.org/x/text/language"
 	"net/http"
 )
@@ -22,9 +23,9 @@ func NewTestClass() *TestClass {
 func (this *TestClass) test(ctx *gin.Context) athena.Json {
 	return athena.Json{
 		"message": "test",
-		"my_name": conf.MyConf.MyName,
-		"my_age":  conf.MyConf.MyAge,
-		"ex_name": conf.MyConf.Ex.ExName,
+		"my_name": properties.MyConf.MyName,
+		"my_age":  properties.MyConf.MyAge,
+		"ex_name": properties.MyConf.Ex.ExName,
 	}
 }
 
@@ -49,13 +50,13 @@ func (this *TestClass) ping(ctx *gin.Context) athena.Json {
 }
 
 func (this *TestClass) lang(ctx *gin.Context) athena.Json {
-	localize := athena.Unwrap(athena.GetDefaultLocalize()).(*i18n.Localizer)
+	localize := athena.Unwrap(plugins.GetDefaultLocalize()).(*i18n.Localizer)
 	strDefault := athena.Unwrap(localize.Localize(&i18n.LocalizeConfig{
 		MessageID:    "test.hello",
 		TemplateData: map[string]string{"name": "Nick"},
 	}))
 
-	localizeEn := athena.Unwrap(athena.GetLocalize(language.English.String())).(*i18n.Localizer)
+	localizeEn := athena.Unwrap(plugins.GetLocalize(language.English.String())).(*i18n.Localizer)
 	strEnglish := athena.Unwrap(localizeEn.Localize(&i18n.LocalizeConfig{
 		MessageID:    "test.hello",
 		TemplateData: map[string]string{"name": "Nick"},
