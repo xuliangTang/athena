@@ -1,7 +1,7 @@
 package configurations
 
 import (
-	"github.com/xuliangTang/athena/tests/core"
+	"github.com/xuliangTang/athena/tests/internal/core"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"

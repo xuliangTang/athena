@@ -4,22 +4,22 @@ import (
 	"github.com/xuliangTang/athena/athena"
 	"github.com/xuliangTang/athena/athena/middlewares"
 	"github.com/xuliangTang/athena/athena/plugins"
-	"github.com/xuliangTang/athena/tests/classes"
-	"github.com/xuliangTang/athena/tests/configurations"
-	"github.com/xuliangTang/athena/tests/properties"
+	classes2 "github.com/xuliangTang/athena/tests/internal/classes"
+	configurations2 "github.com/xuliangTang/athena/tests/internal/configurations"
+	"github.com/xuliangTang/athena/tests/internal/properties"
 )
 
 func main() {
 	athena.Ignite().
 		Configuration(
-			configurations.NewK8sMaps(),
-			configurations.NewK8sHandler(),
-			configurations.NewK8sConfig()).
+			configurations2.NewK8sMaps(),
+			configurations2.NewK8sHandler(),
+			configurations2.NewK8sConfig()).
 		MappingConfig(&properties.MyConf).
 		RegisterPlugin(plugins.NewI18n(), plugins.NewFuse()).
 		Attach(middlewares.NewRateLimit()).
 		Mount("v1", nil,
-			classes.NewTestClass(),
-			classes.NewK8sClass()).
+			classes2.NewTestClass(),
+			classes2.NewK8sClass()).
 		Launch()
 }

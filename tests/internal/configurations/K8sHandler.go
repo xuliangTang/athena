@@ -1,7 +1,7 @@
 package configurations
 
 import (
-	"github.com/xuliangTang/athena/tests/core"
+	"github.com/xuliangTang/athena/tests/internal/core"
 )
 
 // 注入 回调handler

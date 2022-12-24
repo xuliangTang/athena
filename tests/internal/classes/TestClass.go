@@ -8,7 +8,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/xuliangTang/athena/athena"
 	"github.com/xuliangTang/athena/athena/plugins"
-	"github.com/xuliangTang/athena/tests/properties"
+	"github.com/xuliangTang/athena/tests/internal/properties"
 	"golang.org/x/text/language"
 	"net/http"
 )

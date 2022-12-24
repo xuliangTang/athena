@@ -3,7 +3,7 @@ package classes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/xuliangTang/athena/athena"
-	"github.com/xuliangTang/athena/tests/core"
+	"github.com/xuliangTang/athena/tests/internal/core"
 	"k8s.io/client-go/kubernetes"
 )
 
