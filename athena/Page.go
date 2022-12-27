@@ -9,18 +9,19 @@ import (
 
 type Page struct {
 	Db          *gorm.DB    `json:"-"`
-	CurrentPage int         `json:"current_page"` // 当前页
-	PerPage     int         `json:"per_page"`     // 每页条数
-	TotalSize   int64       `json:"total_size"`   // 总条数
-	TotalPage   int         `json:"total_page"`   // 总页数
+	CurrentPage int         `json:"current_page"`     // 当前页
+	PerPage     int         `json:"per_page"`         // 每页条数
+	TotalSize   int64       `json:"total_size"`       // 总条数
+	TotalPage   int         `json:"total_page"`       // 总页数
+	Extend      any         `json:"extend,omitempty"` // 扩展字段
 	Order       string      `json:"-"`
 	Fields      []string    `json:"-"`
 	Preloads    []*Preload  `json:"-"`
 	Where       *Conditions `json:"-"`
 }
 
-func NewPage(currentPage int, perPage int, order string) *Page {
-	return &Page{CurrentPage: currentPage, PerPage: perPage, Order: order}
+func NewPage(currentPage int, perPage int) *Page {
+	return &Page{CurrentPage: currentPage, PerPage: perPage}
 }
 
 // NewPageWithCtx 通过 query 参数创建
@@ -84,6 +85,26 @@ func (this *Page) SelectList(items any) *gorm.DB {
 	this.SetTotal(totalSize)
 
 	return tx
+}
+
+// SlicePage 切片分页
+func (this *Page) SlicePage(list []any) (start int, end int64) {
+	this.TotalSize = int64(len(list))
+
+	this.TotalPage = int(math.Ceil(float64(this.TotalSize) / float64(this.PerPage)))
+	if this.CurrentPage > this.TotalPage {
+		// this.CurrentPage = this.TotalPage
+		return 0, 0
+	}
+
+	start = (this.CurrentPage - 1) * this.PerPage
+	end = int64(start + this.PerPage)
+	if end > this.TotalSize {
+		end = this.TotalSize
+	}
+
+	//ret = list[start:end]
+	return start, end
 }
 
 // Collection 分页集合
