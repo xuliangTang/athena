@@ -17,3 +17,11 @@ func Unwrap(result any, err error) any {
 
 	return result
 }
+
+func UnwrapOrEmpty(result string, err error) string {
+	if err != nil {
+		return ""
+	}
+
+	return result
+}
