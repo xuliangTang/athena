@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/xuliangTang/athena/athena/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -78,16 +78,36 @@ func Logger() *LoggingImpl {
 
 // 重写父类方法
 func (this *LoggingImpl) Error(msg string, fields ...zap.Field) {
-	fields = append(fields, zap.String("stack", this.GetStack()))
+	fields = append(fields, zap.String("stack", this.GetStack(10)))
 
 	this.Logger.Error(msg, fields...)
 }
 
 // GetStack 获取堆栈信息
-func (this *LoggingImpl) GetStack() string {
-	var buf [4096]byte
+func (this *LoggingImpl) GetStack(kb int) string {
+	/*var buf [4096]byte
 	n := runtime.Stack(buf[:], false)
-	return fmt.Sprintf("==> %s\n", string(buf[:n]))
+	return fmt.Sprintf("==> %s\n", string(buf[:n]))*/
+
+	s := []byte("/src/runtime/panic.go")
+	e := []byte("\ngoroutine ")
+	line := []byte("\n")
+	stack := make([]byte, kb<<10) // 4KB
+	length := runtime.Stack(stack, true)
+	start := bytes.Index(stack, s)
+	stack = stack[start:length]
+	start = bytes.Index(stack, line) + 1
+	stack = stack[start:]
+	end := bytes.LastIndex(stack, line)
+	if end != -1 {
+		stack = stack[:end]
+	}
+	end = bytes.Index(stack, e)
+	if end != -1 {
+		stack = stack[:end]
+	}
+	stack = bytes.TrimRight(stack, "\n")
+	return string(stack)
 }
 
 // 所有日志类型
