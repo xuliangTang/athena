@@ -21,6 +21,13 @@ func NewTestClass() *TestClass {
 }
 
 func (this *TestClass) test(ctx *gin.Context) athena.Json {
+	if _, ok := ctx.GetQuery("err"); ok {
+		ctx.Set(athena.CtxHttpStatusCode, 403)
+		panic("test error!")
+	}
+
+	ctx.Set(athena.CtxCode, 10001)
+	ctx.Set(athena.CtxMessage, "查询成功")
 	return athena.Json{
 		"message": "test",
 		"my_name": properties.MyConf.MyName,
@@ -30,7 +37,7 @@ func (this *TestClass) test(ctx *gin.Context) athena.Json {
 	}
 }
 
-func (this *TestClass) ping(ctx *gin.Context) athena.Json {
+func (this *TestClass) ping(ctx *gin.Context) any {
 	msg := "success"
 	hystrix.Do("test1", func() error {
 		resp, err := http.Get("https://www.google.com/")
@@ -38,16 +45,20 @@ func (this *TestClass) ping(ctx *gin.Context) athena.Json {
 			fmt.Printf("请求失败:%v", err)
 			return errors.New(fmt.Sprintf("error resp"))
 		}
+		ctx.Set(athena.CtxHttpStatusCode, 410)
 		return nil
 	}, func(err error) error {
 		if err != nil {
 			fmt.Printf("circuitBreaker and err is %s\n", err.Error())
 			msg = err.Error()
 		}
+		ctx.Set(athena.CtxHttpStatusCode, 411)
 		return nil
 	})
 
-	return athena.Json{"msg": msg}
+	ctx.Set(athena.CtxCode, 10002)
+	ctx.Set(athena.CtxMessage, msg)
+	return struct{}{}
 }
 
 func (this *TestClass) lang(ctx *gin.Context) athena.Json {
@@ -63,6 +74,8 @@ func (this *TestClass) lang(ctx *gin.Context) athena.Json {
 		TemplateData: map[string]string{"name": "Nick"},
 	}))
 
+	ctx.Set(athena.CtxCode, 10003)
+	ctx.Set(athena.CtxHttpStatusCode, 201)
 	return athena.Json{"default": strDefault, "en": strEnglish}
 }
 
