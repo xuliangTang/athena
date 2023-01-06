@@ -43,7 +43,7 @@ func (this *Athena) Handle(httpMethod, relativePath string, handler interface{})
 }
 
 // MappingConfig 映射配置文件到实体对象中
-func (this *Athena) MappingConfig(entity config.IConfig) *Athena {
+func (this *Athena) MappingConfig(entity config.IConfig, decoderConfigOpts ...viper.DecoderConfigOption) *Athena {
 	config.AddViperUnmarshal(config.AppConf.FileName, entity, func(vp *viper.Viper) config.OnConfigChangeRunFn {
 		return func(in fsnotify.Event) {
 			// 配置变更后重新解析
@@ -51,7 +51,7 @@ func (this *Athena) MappingConfig(entity config.IConfig) *Athena {
 				log.Println(fmt.Sprintf("unmarshal config failed: %s", err.Error()))
 			}
 		}
-	})
+	}, decoderConfigOpts...)
 
 	return this
 }
