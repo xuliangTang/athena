@@ -26,6 +26,7 @@ func (this *TestClass) test(ctx *gin.Context) athena.Json {
 		"my_name": properties.MyConf.MyName,
 		"my_age":  properties.MyConf.MyAge,
 		"ex_name": properties.MyConf.Ex.ExName,
+		"nodes":   properties.Nodes,
 	}
 }
 
