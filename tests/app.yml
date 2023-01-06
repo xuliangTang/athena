@@ -1,0 +1,11 @@
+nodes:
+  - node1:
+      username: "test1"
+      password: "ddd"
+      host: "123.12.11.11"
+      port: 22
+  - node2:
+      username: "test2"
+      password: "abcdef"
+      host: "69.11.11.11"
+      port: 22
