@@ -7,6 +7,12 @@ import (
 	"sync"
 )
 
+const (
+	CtxHttpStatusCode = "athena_httpStatusCode"
+	CtxCode           = "athena_code"
+	CtxMessage        = "athena_message"
+)
+
 var ResponderList []Responder
 var ResponsePool *sync.Pool
 
@@ -15,40 +21,27 @@ type Responder interface {
 }
 
 type Response struct {
-	HttpCode HttpCode `json:"code"`
-	Message  string   `json:"message"`
-	Data     any      `json:"data"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
 }
 
 func init() {
 	ResponderList = []Responder{
-		new(OriginResponder),
 		new(StringResponder),
-		new(ModelResponder),
-		new(ModelsResponder),
 		new(AnyResponder),
 		new(JsonResponder),
 		new(CollectionResponder),
-		new(HttpCodeResponder),
+		new(VoidResponder),
 	}
 
 	ResponsePool = &sync.Pool{New: func() any {
 		return &Response{
-			HttpCode: http.StatusOK,
-			Message:  "success",
-			Data:     nil,
+			Code:    http.StatusOK,
+			Message: "success",
+			Data:    nil,
 		}
 	}}
-}
-
-// GetResponse 从response池中拿出一个对象
-func GetResponse() *Response {
-	return ResponsePool.Get().(*Response)
-}
-
-// PutResponse 放回response对象池
-func PutResponse(response *Response) {
-	ResponsePool.Put(response)
 }
 
 func Convert(handler interface{}) gin.HandlerFunc {
@@ -63,18 +56,60 @@ func Convert(handler interface{}) gin.HandlerFunc {
 	return nil
 }
 
+// 从response池中拿出一个对象
+func getResponse() *Response {
+	return ResponsePool.Get().(*Response)
+}
+
+// 放回response对象池
+func putResponse(response *Response) {
+	ResponsePool.Put(response)
+}
+
+func getCode(ctx *gin.Context) (code int) {
+	if ctxCode, exist := ctx.Get(CtxCode); exist {
+		if v, ok := ctxCode.(int); ok {
+			code = v
+		}
+	}
+
+	return
+}
+
+func getHttpStatusCode(ctx *gin.Context) (code int) {
+	code = http.StatusOK
+	if ctxCode, exist := ctx.Get(CtxHttpStatusCode); exist {
+		if v, ok := ctxCode.(int); ok {
+			code = v
+		}
+	}
+
+	return
+}
+
+func getMessage(ctx *gin.Context) (msg string) {
+	msg = "success"
+	if ctxCode, exist := ctx.Get(CtxMessage); exist {
+		if v, ok := ctxCode.(string); ok {
+			msg = v
+		}
+	}
+
+	return
+}
+
 // Controller return any
 
 type AnyResponder func(ctx *gin.Context) any
 
 func (this AnyResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		response := GetResponse()
-		defer PutResponse(response)
-		response.HttpCode = http.StatusOK
-		response.Message = "success"
+		response := getResponse()
+		defer putResponse(response)
 		response.Data = this(context)
-		context.JSON(int(response.HttpCode), response)
+		response.Message = getMessage(context)
+		response.Code = getCode(context)
+		context.JSON(getHttpStatusCode(context), response)
 	}
 }
 
@@ -85,13 +120,12 @@ type JsonResponder func(*gin.Context) Json
 
 func (this JsonResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		response := GetResponse()
-		defer PutResponse(response)
-		// get的对象可能是上一次回收的对象,需要重新赋值
-		response.HttpCode = http.StatusOK
-		response.Message = "success"
+		response := getResponse()
+		defer putResponse(response)
 		response.Data = this(context)
-		context.JSON(int(response.HttpCode), response)
+		response.Message = getMessage(context)
+		response.Code = getCode(context)
+		context.JSON(getHttpStatusCode(context), response)
 	}
 }
 
@@ -101,38 +135,24 @@ type CollectionResponder func(ctx *gin.Context) Collection
 
 func (this CollectionResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		response := GetResponse()
-		defer PutResponse(response)
-		response.HttpCode = http.StatusOK
-		response.Message = "success"
+		response := getResponse()
+		defer putResponse(response)
 		response.Data = this(context)
-		context.JSON(int(response.HttpCode), response)
+		response.Message = getMessage(context)
+		response.Code = getCode(context)
+		context.JSON(getHttpStatusCode(context), response)
 	}
 }
 
-// Controller return with Origin Responder
+// Controller return void
 
-type OriginResponder func(ctx *gin.Context) (HttpCode, any)
+type Void struct{}
+type VoidResponder func(ctx *gin.Context) Void
 
-func (this OriginResponder) RespondTo() gin.HandlerFunc {
+func (this VoidResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		response := GetResponse()
-		defer PutResponse(response)
-		response.Message = "success"
-		response.HttpCode, response.Data = this(context)
-		context.JSON(int(response.HttpCode), response)
-	}
-}
-
-// Controller return httpCode
-
-type HttpCode int
-type HttpCodeResponder func(ctx *gin.Context) HttpCode
-
-func (this HttpCodeResponder) RespondTo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		code := this(context)
-		context.Status(int(code))
+		this(context)
+		context.Status(getHttpStatusCode(context))
 	}
 }
 
@@ -142,32 +162,7 @@ type StringResponder func(*gin.Context) string
 
 func (this StringResponder) RespondTo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		context.String(http.StatusOK, this(context))
-	}
-}
-
-// Controller return model
-
-type ModelResponder func(*gin.Context) Model
-
-func (this ModelResponder) RespondTo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		response := GetResponse()
-		defer PutResponse(response)
-		response.HttpCode = http.StatusOK
-		response.Message = "success"
-		response.Data = this(context)
-		context.JSON(int(response.HttpCode), response)
-	}
-}
-
-// Controller return models
-
-type ModelsResponder func(*gin.Context) Models
-
-func (this ModelsResponder) RespondTo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		context.Writer.Header().Set("Content-type", "application/json")
-		context.Writer.WriteString(string(this(context)))
+		msg := this(context)
+		context.String(getHttpStatusCode(context), msg)
 	}
 }
