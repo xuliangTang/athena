@@ -11,14 +11,14 @@ import (
 	"runtime"
 )
 
-// ErrorCache @Middleware 错误捕获
-type ErrorCache struct{}
+// ErrorCatch @Middleware 错误捕获
+type ErrorCatch struct{}
 
-func NewErrorCache() *ErrorCache {
-	return &ErrorCache{}
+func NewErrorCatch() *ErrorCatch {
+	return &ErrorCatch{}
 }
 
-func (*ErrorCache) OnRequest(ctx *gin.Context) {
+func (*ErrorCatch) OnRequest(ctx *gin.Context) {
 	defer func() {
 		if e := recover(); e != nil {
 			var errInfo string

@@ -75,8 +75,8 @@ func (this *Athena) registerSysMiddleware() {
 		this.Attach(middlewares.NewCors())
 	}
 
-	if config.AppConf.ErrorCache.Enable {
-		this.Attach(middlewares.NewErrorCache())
+	if config.AppConf.ErrorCatch.Enable {
+		this.Attach(middlewares.NewErrorCatch())
 	}
 
 	if config.AppConf.Logging.RequestLogEnable {

@@ -17,14 +17,14 @@ type AppConfImpl struct {
 	Port       int
 	Logging    *LoggingOpt
 	Cors       *CorsOpt
-	ErrorCache *ErrorCacheOpt
+	ErrorCatch *ErrorCatchOpt
 }
 
 type CorsOpt struct {
 	Enable bool
 }
 
-type ErrorCacheOpt struct {
+type ErrorCatchOpt struct {
 	Enable bool
 }
 
@@ -53,7 +53,7 @@ func (this *AppConfImpl) InitDefaultConfig(vp *viper.Viper) {
 	vp.SetDefault("logging.logError.maxAge", 180)
 	vp.SetDefault("logging.logError.maxBackups", 5)
 	vp.SetDefault("cors.enable", false)
-	vp.SetDefault("errorCache.enable", false)
+	vp.SetDefault("errorCatch.enable", false)
 }
 
 func init() {

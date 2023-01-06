@@ -1,11 +1,21 @@
 cors:
   enable: true
 
-errorCache:
+errorCatch:
   enable: true
 
 logging:
   requestLogEnable: true
+  logAccess:
+    filePath: "/storage/logs/access.log"
+    maxSize: 255
+    maxAge: 60
+    maxBackups: 5
+  logError:
+    filePath: "/storage/logs/error.log"
+    maxSize: 255
+    maxAge: 60
+    maxBackups: 5
 
 rateLimitRules:
   - /v1/test:
