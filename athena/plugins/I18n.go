@@ -37,7 +37,7 @@ func (this *I18n) Enabler() bool {
 func (this *I18n) mappingConfig() {
 	once := sync.Once{}
 	once.Do(func() {
-		config.AddViperUnmarshal(&this.config, nil)
+		config.AddViperUnmarshal(config.AppConf.FileName, &this.config, nil)
 	})
 }
 

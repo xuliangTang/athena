@@ -100,7 +100,7 @@ func (l *UriLimiter) getConf() *LimitConfRules {
 	once := sync.Once{}
 	rule := &LimitConfRules{}
 	once.Do(func() {
-		config.AddViperUnmarshal(rule, func(vp *viper.Viper) config.OnConfigChangeRunFn {
+		config.AddViperUnmarshal(config.AppConf.FileName, rule, func(vp *viper.Viper) config.OnConfigChangeRunFn {
 			return func(in fsnotify.Event) {
 				GlobalLimiter = NewUriLimiter().AddBucketByConf()
 			}

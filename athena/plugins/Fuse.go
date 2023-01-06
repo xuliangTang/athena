@@ -25,7 +25,7 @@ func (this *Fuse) Enabler() bool {
 func (this *Fuse) mappingConfig() {
 	once := sync.Once{}
 	once.Do(func() {
-		config.AddViperUnmarshal(&this.config, func(vp *viper.Viper) config.OnConfigChangeRunFn {
+		config.AddViperUnmarshal(config.AppConf.FileName, &this.config, func(vp *viper.Viper) config.OnConfigChangeRunFn {
 			return func(in fsnotify.Event) {
 				this.InitModule()
 			}

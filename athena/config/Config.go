@@ -12,6 +12,7 @@ import (
 var AppConf AppConfImpl
 
 type AppConfImpl struct {
+	FileName   string
 	AppPath    string
 	Port       int
 	Logging    *LoggingOpt
@@ -57,10 +58,11 @@ func (this *AppConfImpl) InitDefaultConfig(vp *viper.Viper) {
 
 func init() {
 	AppConf = AppConfImpl{
-		AppPath: Helper.GetWorkDir(),
+		AppPath:  Helper.GetWorkDir(),
+		FileName: "application.yml",
 	}
 
-	AddViperUnmarshal(&AppConf, func(vp *viper.Viper) OnConfigChangeRunFn {
+	AddViperUnmarshal(AppConf.FileName, &AppConf, func(vp *viper.Viper) OnConfigChangeRunFn {
 		return func(in fsnotify.Event) {
 			// 配置变更后重新解析
 			if err := vp.Unmarshal(&AppConf); err != nil {
@@ -78,9 +80,9 @@ type IConfig interface {
 type OnConfigChangeFn func(vp *viper.Viper) OnConfigChangeRunFn
 type OnConfigChangeRunFn func(in fsnotify.Event)
 
-func AddViperUnmarshal(conf IConfig, onChange OnConfigChangeFn) {
+func AddViperUnmarshal(fileName string, conf IConfig, onChange OnConfigChangeFn, decoderConfigOpts ...viper.DecoderConfigOption) {
 	vp := viper.New()
-	vp.SetConfigFile(AppConf.AppPath + "/application.yml")
+	vp.SetConfigFile(fmt.Sprintf("%s/%s", AppConf.AppPath, fileName))
 	vp.AutomaticEnv()
 	if err := vp.ReadInConfig(); err != nil {
 		log.Fatalln(fmt.Sprintf("error reading config file, %s", err))
@@ -89,7 +91,7 @@ func AddViperUnmarshal(conf IConfig, onChange OnConfigChangeFn) {
 	// 初始化默认值
 	conf.InitDefaultConfig(vp)
 
-	if err := vp.Unmarshal(conf); err != nil {
+	if err := vp.Unmarshal(conf, decoderConfigOpts...); err != nil {
 		log.Fatalln(fmt.Sprintf("unable to decode into struct, %v", err))
 	}
 

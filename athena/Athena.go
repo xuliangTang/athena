@@ -44,7 +44,7 @@ func (this *Athena) Handle(httpMethod, relativePath string, handler interface{})
 
 // MappingConfig 映射配置文件到实体对象中
 func (this *Athena) MappingConfig(entity config.IConfig) *Athena {
-	config.AddViperUnmarshal(entity, func(vp *viper.Viper) config.OnConfigChangeRunFn {
+	config.AddViperUnmarshal(config.AppConf.FileName, entity, func(vp *viper.Viper) config.OnConfigChangeRunFn {
 		return func(in fsnotify.Event) {
 			// 配置变更后重新解析
 			if err := vp.Unmarshal(&entity); err != nil {
