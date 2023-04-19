@@ -95,6 +95,9 @@ func (this *LoggingImpl) GetStack(kb int) string {
 	stack := make([]byte, kb<<10) // 4KB
 	length := runtime.Stack(stack, true)
 	start := bytes.Index(stack, s)
+	if start < 0 {
+		start = 0
+	}
 	stack = stack[start:length]
 	start = bytes.Index(stack, line) + 1
 	stack = stack[start:]
