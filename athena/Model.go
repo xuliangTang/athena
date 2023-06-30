@@ -87,6 +87,16 @@ func NewPreload(query string, args ...any) *Preload {
 	return &Preload{Query: query, Args: args}
 }
 
+// Join 关联
+type Join struct {
+	Query string
+	Args  []any
+}
+
+func NewJoin(query string, args ...any) *Join {
+	return &Join{Query: query, Args: args}
+}
+
 const DateTimeFormat = "2006-01-02 15:04:05"
 const DateFormat = "2006-01-02"
 
