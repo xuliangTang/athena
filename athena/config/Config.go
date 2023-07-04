@@ -5,6 +5,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	Helper "github.com/xuliangTang/athena/cmd/helper"
+	"github.com/xuliangTang/athena/resources/tpl"
 	"log"
 )
 
@@ -18,6 +19,7 @@ type AppConfImpl struct {
 	Logging    *LoggingOpt
 	Cors       *CorsOpt
 	ErrorCatch *ErrorCatchOpt
+	RspCueTpl  *RspCueTplOpt // http响应结构的cue模板
 }
 
 type CorsOpt struct {
@@ -41,19 +43,24 @@ type LogFileOpt struct {
 	MaxBackups int    // 最大保留历史日志数量
 }
 
+type RspCueTplOpt struct {
+	ErrorTpl string // 错误的cue模板
+}
+
 func (this *AppConfImpl) InitDefaultConfig(vp *viper.Viper) {
 	vp.SetDefault("port", 80)
 	vp.SetDefault("logging.requestLogEnable", false)
-	vp.SetDefault("logging.logAccess.filePath", "/storage/logs/access.log")
+	vp.SetDefault("logging.logAccess.filePath", "./storage/logs/access.log")
 	vp.SetDefault("logging.logAccess.maxSize", 255)
 	vp.SetDefault("logging.logAccess.maxAge", 60)
 	vp.SetDefault("logging.logAccess.maxBackups", 5)
-	vp.SetDefault("logging.logError.filePath", "/storage/logs/error.log")
+	vp.SetDefault("logging.logError.filePath", "./storage/logs/error.log")
 	vp.SetDefault("logging.logError.maxSize", 255)
 	vp.SetDefault("logging.logError.maxAge", 180)
 	vp.SetDefault("logging.logError.maxBackups", 5)
 	vp.SetDefault("cors.enable", false)
 	vp.SetDefault("errorCatch.enable", false)
+	vp.SetDefault("rspCueTpl.errorTpl", tpl.RspError)
 }
 
 func init() {

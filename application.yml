@@ -50,3 +50,12 @@ logAccess:
 
 logError:
   filePath:
+
+rspCueTpl:
+  errorTpl: |-
+    output: {
+      // @code
+      code: int
+      // @message
+      msg: string
+    }
