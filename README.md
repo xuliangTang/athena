@@ -84,6 +84,15 @@ fuse:
         sleepWindow: 6000
         requestVolumeThreshold: 5
         errorPercentThreshold: 50
+
+rspCueTpl:
+  errorTpl: |-
+    output: {
+      // @code
+      code: int
+      // @message
+      msg: string
+    }
 ```
 
 If you want more quick start examples, please refer to [pixelK8](https://github.com/xuliangTang/pixelK8).

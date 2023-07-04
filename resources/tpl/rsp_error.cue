@@ -1,0 +1,4 @@
+output: {
+	// @message
+	error: string
+}
