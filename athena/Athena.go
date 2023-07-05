@@ -1,6 +1,7 @@
 package athena
 
 import (
+	"cuelang.org/go/cue/cuecontext"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 	"github.com/xuliangTang/athena/athena/lib"
 	"github.com/xuliangTang/athena/athena/middlewares"
 	"github.com/xuliangTang/athena/athena/task"
+	"github.com/xuliangTang/athena/resources/tpl"
 	"go.uber.org/zap"
 	"log"
 	"reflect"
@@ -18,13 +20,15 @@ import (
 
 type Athena struct {
 	*gin.Engine
-	g     *gin.RouterGroup
-	props []any
+	g         *gin.RouterGroup
+	props     []any
+	cueScheme *lib.CueScheme
 }
 
 func Ignite() *Athena {
-	g := &Athena{Engine: gin.New()}
-	g.registerSysMiddleware()
+	g := &Athena{Engine: gin.New(), cueScheme: lib.NewCueScheme()}
+	g.registerCueScheme().registerSysMiddleware()
+
 	return g
 }
 
@@ -69,19 +73,35 @@ func (this *Athena) RegisterPlugin(plugins ...interfaces.IPlugin) *Athena {
 	return this
 }
 
+// 注册cue模板
+func (this *Athena) registerCueScheme() *Athena {
+	cc := cuecontext.New()
+
+	// 错误响应cue模板
+	rspErrorValue := cc.CompileString(config.AppConf.RspCueTpl.ErrorTpl)
+	if err := rspErrorValue.Err(); err != nil {
+		panic(fmt.Sprintf("注册cue模板[%s]失败: %s", tpl.RspError, err))
+	}
+	this.cueScheme.AddScheme(tpl.RspErrorName, rspErrorValue)
+
+	return this
+}
+
 // 根据开关开启中间件
-func (this *Athena) registerSysMiddleware() {
+func (this *Athena) registerSysMiddleware() *Athena {
 	if config.AppConf.Cors.Enable {
 		this.Attach(middlewares.NewCors())
 	}
 
 	if config.AppConf.ErrorCatch.Enable {
-		this.Attach(middlewares.NewErrorCatch())
+		this.Attach(middlewares.NewErrorCatch(this.cueScheme.MustGetScheme(tpl.RspErrorName)))
 	}
 
 	if config.AppConf.Logging.RequestLogEnable {
 		this.Attach(middlewares.NewRequestLog())
 	}
+
+	return this
 }
 
 // Attach 加入全局中间件
