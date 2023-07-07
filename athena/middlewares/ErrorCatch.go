@@ -69,27 +69,29 @@ func (this *ErrorCatch) printError(err interface{}) {
 
 // 根据cue模板生成响应结构体
 func (this *ErrorCatch) genRspByCue(code int, message string) cue.Value {
+	errV := this.RspErrorValue
+	
 	// 遍历模板节点
-	if field, err := this.RspErrorValue.LookupPath(cue.ParsePath(cueOutput)).Fields(); err == nil {
+	if field, err := errV.LookupPath(cue.ParsePath(cueOutput)).Fields(); err == nil {
 		for field.Next() {
 			// 获取每个节点的注释
 			parsePath := cue.ParsePath(cueOutput + "." + field.Label())
-			doc := this.RspErrorValue.LookupPath(parsePath).Doc()
+			doc := errV.LookupPath(parsePath).Doc()
 
 			// 替换
 			for _, d := range doc {
 				getDoc := strings.TrimSpace(d.Text())
 
 				if getDoc == "@code" {
-					this.RspErrorValue = this.RspErrorValue.FillPath(parsePath, code)
+					errV = errV.FillPath(parsePath, code)
 					break
 				} else if getDoc == "@message" {
-					this.RspErrorValue = this.RspErrorValue.FillPath(parsePath, message)
+					errV = errV.FillPath(parsePath, message)
 					break
 				}
 			}
 		}
 	}
 
-	return this.RspErrorValue.LookupPath(cue.ParsePath(cueOutput)).Value()
+	return errV.LookupPath(cue.ParsePath(cueOutput)).Value()
 }
